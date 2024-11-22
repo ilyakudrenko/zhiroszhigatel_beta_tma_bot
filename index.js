@@ -31,7 +31,7 @@ bot.on('message', async (msg) => {
             }
         })
 
-        await bot.sendMessage(chatId, 'Перейти в магазин', {
+        await bot.sendMessage(chatId, 'Перейти в никуда', {
             reply_markup: {
                 inline_keyboard: [
                     [{text: 'Войти', web_app: {url: webAppUrl}}]
