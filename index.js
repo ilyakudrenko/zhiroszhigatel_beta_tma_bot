@@ -39,5 +39,17 @@ bot.on('message', async (msg) => {
             }
         })
     }
+});
 
+// Обработка успешного платежа
+bot.on('pre_checkout_query', async (query) => {
+    console.log("Платежный запрос:", query);
+    await bot.answerPreCheckoutQuery(query.id, true);
+});
+
+bot.on('successful_payment', async (msg) => {
+    const chatId = msg.chat.id;
+    console.log("Успешный платеж:", msg.successful_payment);
+
+    await bot.sendMessage(chatId, '✅ Оплата прошла успешно! Ваш план тренировок активирован.');
 });
