@@ -41,15 +41,22 @@ bot.on('message', async (msg) => {
     }
 });
 
-// Обработка успешного платежа
-bot.on('pre_checkout_query', async (query) => {
-    console.log("Платежный запрос:", query);
-    await bot.answerPreCheckoutQuery(query.id, true);
-});
-
 bot.on('successful_payment', async (msg) => {
     const chatId = msg.chat.id;
-    console.log("Успешный платеж:", msg.successful_payment);
+    const paymentPayload = JSON.parse(msg.successful_payment.invoice_payload);
 
-    await bot.sendMessage(chatId, '✅ Оплата прошла успешно! Ваш план тренировок активирован.');
+    console.log("Оплата завершена:", paymentPayload);
+
+    const userId = paymentPayload.user_id;
+    const trainingId = paymentPayload.training_id;
+
+    try {
+        // Добавляем тренировочный план пользователю
+        await addUserTraining(userId, trainingId);
+
+        bot.sendMessage(chatId, `✅ Ваш план тренировок добавлен! 🎉`);
+    } catch (error) {
+        console.error("Ошибка при добавлении тренировки:", error);
+        bot.sendMessage(chatId, "❌ Ошибка при обработке покупки, попробуйте позже.");
+    }
 });
