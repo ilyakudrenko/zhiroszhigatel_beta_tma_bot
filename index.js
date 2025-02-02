@@ -39,24 +39,5 @@ bot.on('message', async (msg) => {
             }
         })
     }
-});
 
-bot.on('successful_payment', async (msg) => {
-    const chatId = msg.chat.id;
-    const paymentPayload = JSON.parse(msg.successful_payment.invoice_payload);
-
-    console.log("Оплата завершена:", paymentPayload);
-
-    const userId = paymentPayload.user_id;
-    const trainingId = paymentPayload.training_id;
-
-    try {
-        // Добавляем тренировочный план пользователю
-        await addUserTraining(userId, trainingId);
-
-        await bot.sendMessage(chatId, `✅ Ваш план тренировок добавлен! 🎉`);
-    } catch (error) {
-        console.error("Ошибка при добавлении тренировки:", error);
-        await bot.sendMessage(chatId, "❌ Ошибка при обработке покупки, попробуйте позже.");
-    }
 });
