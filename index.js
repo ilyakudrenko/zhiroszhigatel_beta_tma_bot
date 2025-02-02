@@ -45,21 +45,19 @@ bot.onText(/\/buy (.+) (.+) (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const trainingId = match[1]; // ID тренировки
     const price = parseInt(match[2], 10); // Цена в звездах
-    const title = match[3]; // Название тренировки
+    const title = match.slice(3).join(' '); // Название тренировки
 
-    console.log(`✅ Получен запрос на покупку: ${title} (ID: ${trainingId}) за ${price} Stars`);
+    console.log(`✅ Запрос на покупку: ID ${trainingId}, Цена ${price}, Название ${title}`);
 
     try {
         await bot.sendInvoice(
             chatId,
             title, // Заголовок (обязательно)
-            `Доступ к эксклюзивному плану тренировок`, // Описание (обязательно)
+            `Доступ к плану тренировок "${title}"`, // Описание
             JSON.stringify({ user_id: chatId, training_id: trainingId }), // Уникальный payload
             "", // Token не нужен для Stars
             "XTR", // Валюта (Telegram Stars)
-            [
-                { label: title, amount: price * 100 } // Stars
-            ],
+            [{ label: title, amount: price * 100 }], // Stars
             {
                 need_name: false,
                 need_phone_number: false,
@@ -69,7 +67,6 @@ bot.onText(/\/buy (.+) (.+) (.+)/, async (msg, match) => {
         );
 
         console.log("✅ Инвойс успешно отправлен!");
-
     } catch (error) {
         console.error("❌ Ошибка при отправке инвойса:", error);
         bot.sendMessage(chatId, "❌ Ошибка при создании инвойса. Попробуйте позже!");
