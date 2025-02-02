@@ -44,14 +44,14 @@ bot.on('message', async (msg) => {
     if (text === '/buy') {
         const invoice = {
             chat_id: chatId,
-            title: 'План тренировок',
-            description: 'Доступ к эксклюзивному плану тренировок',
+            title: 'План тренировок', // REQUIRED - Add a title
+            description: 'Доступ к эксклюзивному плану тренировок', // REQUIRED - Add a description
             payload: JSON.stringify({ user_id: msg.from.id, training_id: 'unique_training_plan_id' }),
-            provider_token: '', // Оставьте пустым для Telegram Stars
-            currency: 'XTR', // Валюта Telegram Stars
-            prices: [{ label: 'План тренировок', amount: 10 * 100 }], // 10 Stars
+            provider_token: '', // Leave empty for Telegram Stars
+            currency: 'XTR', // Telegram Stars currency
+            prices: [{ label: 'План тренировок', amount: 500 * 100 }], // 500 Stars
             start_parameter: 'purchase_training_plan',
-            photo_url: 'URL_ИЗОБРАЖЕНИЯ_ПЛАНА',
+            photo_url: 'https://i.pinimg.com/736x/5b/ad/89/5bad896bc3ec8e5bffe19fdf817f1e47.jpg', // REQUIRED - Add a valid image URL
             photo_width: 640,
             photo_height: 640,
             need_name: false,
