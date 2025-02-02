@@ -40,4 +40,69 @@ bot.on('message', async (msg) => {
         })
     }
 
+
+    if (text === '/buy') {
+        const invoice = {
+            chat_id: chatId,
+            title: 'План тренировок',
+            description: 'Доступ к эксклюзивному плану тренировок',
+            payload: JSON.stringify({ user_id: msg.from.id, training_id: 'unique_training_plan_id' }),
+            provider_token: '', // Оставьте пустым для Telegram Stars
+            currency: 'XTR', // Валюта Telegram Stars
+            prices: [{ label: 'План тренировок', amount: 500 * 100 }], // 500 Stars
+            start_parameter: 'purchase_training_plan',
+            photo_url: 'URL_ИЗОБРАЖЕНИЯ_ПЛАНА',
+            photo_width: 640,
+            photo_height: 640,
+            need_name: false,
+            need_phone_number: false,
+            need_email: false,
+            need_shipping_address: false,
+            send_phone_number_to_provider: false,
+            send_email_to_provider: false,
+            is_flexible: false,
+        };
+
+        bot.sendInvoice(invoice).catch((error) => {
+            console.error('Ошибка при отправке инвойса:', error);
+        });
+    }
+
+
 });
+
+
+// Handle pre-checkout query (confirming payment)
+bot.on('pre_checkout_query', (query) => {
+    bot.answerPreCheckoutQuery(query.id, true).catch((error) => {
+        console.error('Ошибка при подтверждении предварительного запроса:', error);
+    });
+});
+
+// Handle successful payment
+bot.on('successful_payment', async (msg) => {
+    const chatId = msg.chat.id;
+    const paymentPayload = JSON.parse(msg.successful_payment.invoice_payload);
+
+    console.log('✅ Успешный платеж:', paymentPayload);
+
+    const userId = paymentPayload.user_id;
+    const trainingId = paymentPayload.training_id;
+
+    try {
+        // Add training plan to user (database update)
+        await addUserTraining(userId, trainingId);
+
+        bot.sendMessage(chatId, '✅ Ваш план тренировок был успешно добавлен! 🎉');
+    } catch (error) {
+        console.error('Ошибка при добавлении плана тренировок:', error);
+        bot.sendMessage(chatId, '❌ Произошла ошибка при обработке вашей покупки. Пожалуйста, попробуйте позже.');
+    }
+});
+
+async function addUserTraining(userId, trainingId) {
+    console.log(`Добавление плана тренировок ${trainingId} пользователю ${userId}`);
+    // Здесь можно добавить логику работы с базой данных
+}
+
+console.log('✅ Бот запущен и ожидает сообщения...');
