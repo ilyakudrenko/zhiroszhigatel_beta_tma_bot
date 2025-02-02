@@ -24,11 +24,7 @@ bot.on('message', async (msg) => {
 
     if(text === '/start') {
         await bot.sendMessage(chatId, 'Добро пожаловать в Жиросжигатель! Мы рады видеть вас среди наших пользователей. Впереди вас ждут эффективные тренировки и проверенные методики, которые помогут вам достичь своих целей. Если у вас есть вопросы или нужна помощь, наша команда всегда готова поддержать вас. Удачи и успешных тренировок! 💪🔥', {
-            reply_markup: {
-                keyboard: [
-                    [{text: 'Запустить', web_app: {url: webAppUrl}}]
-                ]
-            }
+
         })
 
         await bot.sendMessage(chatId, 'Перейти в никуда', {
@@ -58,7 +54,7 @@ bot.onText(/\/buy/, async (msg) => {
             "", // ✅ Leave provider_token empty for Telegram Stars
             "XTR", // ✅ Currency for Telegram Stars
             [
-                { label: "План тренировок", amount: 10 * 100 } // ✅ 500 Stars
+                { label: "План тренировок", amount: 1 } // ✅ 500 Stars
             ],
             {
                 need_name: false,
@@ -87,15 +83,25 @@ bot.on("pre_checkout_query", async (query) => {
 bot.on("successful_payment", async (msg) => {
     const chatId = msg.chat.id;
     const paymentInfo = msg.successful_payment;
-    const payload = JSON.parse(paymentInfo.invoice_payload);
-
-    console.log("✅ Оплата завершена!", paymentInfo);
+    let payload;
 
     try {
-        // Here, you can add the purchased training plan to the user's profile
-        // Example: savePurchaseToDatabase(chatId, payload.training_id);
+        // Check if payload is valid JSON or just a plain string
+        if (paymentInfo.invoice_payload.startsWith("{")) {
+            payload = JSON.parse(paymentInfo.invoice_payload); // If JSON, parse it
+        } else {
+            payload = { order_id: paymentInfo.invoice_payload }; // Otherwise, store as a string
+        }
 
+        console.log("✅ Оплата завершена!", paymentInfo);
+
+        // Extract user_id and training_id from payload (if available)
+        const userId = payload.user_id || chatId;
+        const trainingId = payload.training_id || "default_training_plan";
+
+        // Here, you should save the purchase to a database or give the user access
         await bot.sendMessage(chatId, `🎉 Оплата прошла успешно! Вы получили доступ к плану тренировок.`);
+
     } catch (error) {
         console.error("❌ Ошибка при обработке покупки:", error);
         bot.sendMessage(chatId, "⚠ Ошибка при обработке платежа. Свяжитесь с поддержкой.");
