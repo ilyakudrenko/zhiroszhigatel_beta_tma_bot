@@ -49,7 +49,7 @@ bot.on('message', async (msg) => {
             payload: JSON.stringify({ user_id: msg.from.id, training_id: 'unique_training_plan_id' }),
             provider_token: '', // Оставьте пустым для Telegram Stars
             currency: 'XTR', // Валюта Telegram Stars
-            prices: [{ label: 'План тренировок', amount: 500 * 100 }], // 500 Stars
+            prices: [{ label: 'План тренировок', amount: 10 * 100 }], // 10 Stars
             start_parameter: 'purchase_training_plan',
             photo_url: 'URL_ИЗОБРАЖЕНИЯ_ПЛАНА',
             photo_width: 640,
