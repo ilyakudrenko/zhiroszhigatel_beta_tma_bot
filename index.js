@@ -134,7 +134,7 @@ bot.on("successful_payment", async (msg) => {
 });
 
 console.log("🚀 Bot is running...");
-//loh
+//test update
 
 
 
