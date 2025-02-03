@@ -3,6 +3,7 @@ const token = '7761056672:AAEe8gPZjn3L47D-nrQvUOtAA3nPNnMVfzM';
 const bot = new TelegramBot(token, {polling: true});
 const webAppUrl = 'https://zhiroazhigatel.netlify.app/';
 
+
 // Matches "/echo [whatever]"
 bot.onText(/\/echo (.+)/, (msg, match) => {
     // 'msg' is the received Message from Telegram
@@ -35,29 +36,18 @@ bot.on('message', async (msg) => {
             }
         })
     }
-
-
 });
 
-
-// 🛒 Обрабатываем команду покупки, отправленную из Mini App
-bot.onText(/\/buy (.+) (.+) (.+)/, async (msg, match) => {
-    const chatId = msg.chat.id;
-    const trainingId = match[1]; // ID тренировки
-    const price = parseInt(match[2], 10); // Цена в звездах
-    const title = match.slice(3).join(' '); // Название тренировки
-
-    console.log(`✅ Запрос на покупку: ID ${trainingId}, Цена ${price}, Название ${title}`);
-
+async function sendInvoice(chatId, title, trainingId, price) {
     try {
         await bot.sendInvoice(
             chatId,
-            title, // Заголовок (обязательно)
-            `Доступ к плану тренировок "${title}"`, // Описание
-            JSON.stringify({ user_id: chatId, training_id: trainingId }), // Уникальный payload
-            "", // Token не нужен для Stars
+            title, // Заголовок платежа
+            "Доступ к эксклюзивному плану тренировок", // Описание платежа
+            JSON.stringify({ user_id: chatId, training_id: trainingId }), // Payload
+            "", // Telegram Stars (оставляем пустым)
             "XTR", // Валюта (Telegram Stars)
-            [{ label: title, amount: price * 100 }], // Stars
+            [{ label: title, amount: price * 100 }], // Цена в Stars
             {
                 need_name: false,
                 need_phone_number: false,
@@ -66,10 +56,33 @@ bot.onText(/\/buy (.+) (.+) (.+)/, async (msg, match) => {
             }
         );
 
-        console.log("✅ Инвойс успешно отправлен!");
+        console.log("✅ Инвойс отправлен!");
     } catch (error) {
         console.error("❌ Ошибка при отправке инвойса:", error);
-        bot.sendMessage(chatId, "❌ Ошибка при создании инвойса. Попробуйте позже!");
+        bot.sendMessage(chatId, "❌ Ошибка при создании инвойса. Попробуйте позже.");
+    }
+}
+
+// ✅ Бот обрабатывает команду покупки (от Mini App)
+bot.on("message", async (msg) => {
+    const chatId = msg.chat.id;
+    const text = msg.text;
+
+    // Проверяем, есть ли запрос на оплату
+    if (text && text.startsWith("PAYMENT_REQUEST|")) {
+        const parts = text.split("|");
+        if (parts.length < 4) {
+            return bot.sendMessage(chatId, "❌ Ошибка: неверный формат запроса.");
+        }
+
+        const trainingId = parts[1];
+        const price = parseInt(parts[2], 10);
+        const title = parts[3];
+
+        console.log(`✅ Обрабатываем платеж: ID ${trainingId}, Цена ${price}, Название ${title}`);
+
+        // Отправляем инвойс
+        await sendInvoice(chatId, title, trainingId, price);
     }
 });
 
@@ -78,7 +91,7 @@ bot.on("pre_checkout_query", async (query) => {
     await bot.answerPreCheckoutQuery(query.id, true);
 });
 
-// 🎉 Успешная оплата
+// 🎉 Обработка успешной оплаты
 bot.on("successful_payment", async (msg) => {
     const chatId = msg.chat.id;
     const paymentInfo = msg.successful_payment;
@@ -93,17 +106,88 @@ bot.on("successful_payment", async (msg) => {
 
         // ✅ Здесь можно добавить пользователя в базу данных
 
-        await bot.sendMessage(chatId, `✅ Поздравляем! Вы купили план тренировок 🎉\n\nТеперь он доступен в вашем профиле.`);
-
+        await bot.sendMessage(chatId, `✅ Поздравляем! Вы купили план тренировок 🎉\nТеперь он доступен в вашем профиле.`);
     } catch (error) {
         console.error("❌ Ошибка при обработке покупки:", error);
         bot.sendMessage(chatId, "⚠ Ошибка при обработке платежа. Свяжитесь с поддержкой.");
     }
 });
 
-console.log("🚀 Bot is ready!");
+console.log("🚀 Bot is running...");
 
 
+// bot.on('message', async (msg) => {
+//     const chatId = msg.chat.id;
+//     const text = msg.text;
+//
+//     if (text.startsWith("PAYMENT_REQUEST|")) {
+//         const parts = text.split("|");
+//         if (parts.length < 4) {
+//             return bot.sendMessage(chatId, "❌ Ошибка: неверный формат запроса.");
+//         }
+//
+//         const trainingId = parts[1];
+//         const price = parseInt(parts[2], 10);
+//         const title = parts[3];
+//
+//         console.log(`✅ Обрабатываем платеж: ID ${trainingId}, Цена ${price}, Название ${title}`);
+//
+//         try {
+//             await bot.sendInvoice(
+//                 chatId,
+//                 title, // ✅ Заголовок
+//                 "Доступ к эксклюзивному плану тренировок", // ✅ Описание
+//                 JSON.stringify({ user_id: chatId, training_id: trainingId }), // ✅ Уникальный payload
+//                 "", // ✅ Token не нужен для Stars
+//                 "XTR", // ✅ Валюта (Telegram Stars)
+//                 [{ label: title, amount: price * 100 }], // ✅ Цена в Stars
+//                 {
+//                     need_name: false,
+//                     need_phone_number: false,
+//                     need_email: false,
+//                     need_shipping_address: false
+//                 }
+//             );
+//
+//             console.log("✅ Инвойс отправлен!");
+//         } catch (error) {
+//             console.error("❌ Ошибка при отправке инвойса:", error);
+//             bot.sendMessage(chatId, "❌ Ошибка при создании инвойса. Попробуйте позже.");
+//         }
+//     }
+// });
+//
+// // ✅ Подтверждение оплаты
+// bot.on("pre_checkout_query", async (query) => {
+//     await bot.answerPreCheckoutQuery(query.id, true);
+// });
+//
+// // 🎉 Успешная оплата
+// bot.on("successful_payment", async (msg) => {
+//     const chatId = msg.chat.id;
+//     const paymentInfo = msg.successful_payment;
+//
+//     try {
+//         const payload = JSON.parse(paymentInfo.invoice_payload);
+//         const userId = payload.user_id;
+//         const trainingId = payload.training_id;
+//
+//         console.log(`🎉 Оплата успешна! UserID: ${userId}, TrainingID: ${trainingId}`);
+//
+//         await bot.sendMessage(chatId, `✅ Поздравляем! Вы купили план тренировок 🎉 Теперь он доступен в вашем профиле.`);
+//
+//     } catch (error) {
+//         console.error("❌ Ошибка при обработке покупки:", error);
+//         bot.sendMessage(chatId, "⚠ Ошибка при обработке платежа. Свяжитесь с поддержкой.");
+//     }
+// });
+//
+// console.log("🚀 Bot is ready!");
+
+
+
+
+//
 // // 💰 Handle /buy command to request payment with Telegram Stars
 // bot.onText(/\/buy/, async (msg) => {
 //     const chatId = msg.chat.id;
