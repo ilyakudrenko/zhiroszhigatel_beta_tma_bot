@@ -1,4 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios'); // ✅ Добавляем axios
 const token = '7761056672:AAEe8gPZjn3L47D-nrQvUOtAA3nPNnMVfzM';
 const bot = new TelegramBot(token, {polling: true});
 const webAppUrl = 'https://zhiroazhigatel.netlify.app/';
@@ -96,94 +97,43 @@ bot.on("successful_payment", async (msg) => {
     const chatId = msg.chat.id;
     const paymentInfo = msg.successful_payment;
 
+    console.log("✅ Оплата прошла! Данные о платеже:", paymentInfo);
+
     try {
-        // Извлекаем user_id и training_id из payload
+        if (!paymentInfo.invoice_payload) {
+            throw new Error("🚨 Ошибка: invoice_payload отсутствует!");
+        }
+
+        // ✅ Получаем user_id и telegram_id из payload
         const payload = JSON.parse(paymentInfo.invoice_payload);
-        const userId = payload.user_id;
+        const telegramId = payload.telegram_id; // Telegram ID
+        const userId = payload.user_id; // User ID из базы данных
         const trainingId = payload.training_id;
 
-        console.log(`🎉 Оплата успешна! UserID: ${userId}, TrainingID: ${trainingId}`);
+        console.log(`📦 Полученные данные: Telegram ID: ${telegramId}, User ID: ${userId}, Training ID: ${trainingId}`);
 
-        // ✅ Здесь можно добавить пользователя в базу данных
+        if (!userId) {
+            throw new Error("❌ Ошибка: user_id отсутствует в payload!");
+        }
 
-        await bot.sendMessage(chatId, `✅ Поздравляем! Вы купили план тренировок 🎉\nТеперь он доступен в вашем профиле.`);
+        // **Добавляем тренировку пользователю**
+        console.log(`🌍 Добавляем тренировку ${trainingId} пользователю ${userId}`);
+
+        const addTrainingResponse = await axios.post(`https://init-railway-backend-v2-production.up.railway.app/trainings/add-training`, {
+            user_id: userId,
+            training_id: trainingId,
+        });
+
+        console.log("✅ Тренировка добавлена:", addTrainingResponse.data);
+        await bot.sendMessage(chatId, `✅ Поздравляем! Вы купили план тренировок 🎉 Теперь он доступен в вашем профиле.`);
+
     } catch (error) {
         console.error("❌ Ошибка при обработке покупки:", error);
-        bot.sendMessage(chatId, "⚠ Ошибка при обработке платежа. Свяжитесь с поддержкой.");
+        await bot.sendMessage(chatId, "⚠ Ошибка при обработке платежа. Свяжитесь с поддержкой.");
     }
 });
 
 console.log("🚀 Bot is running...");
-
-
-// bot.on('message', async (msg) => {
-//     const chatId = msg.chat.id;
-//     const text = msg.text;
-//
-//     if (text.startsWith("PAYMENT_REQUEST|")) {
-//         const parts = text.split("|");
-//         if (parts.length < 4) {
-//             return bot.sendMessage(chatId, "❌ Ошибка: неверный формат запроса.");
-//         }
-//
-//         const trainingId = parts[1];
-//         const price = parseInt(parts[2], 10);
-//         const title = parts[3];
-//
-//         console.log(`✅ Обрабатываем платеж: ID ${trainingId}, Цена ${price}, Название ${title}`);
-//
-//         try {
-//             await bot.sendInvoice(
-//                 chatId,
-//                 title, // ✅ Заголовок
-//                 "Доступ к эксклюзивному плану тренировок", // ✅ Описание
-//                 JSON.stringify({ user_id: chatId, training_id: trainingId }), // ✅ Уникальный payload
-//                 "", // ✅ Token не нужен для Stars
-//                 "XTR", // ✅ Валюта (Telegram Stars)
-//                 [{ label: title, amount: price * 100 }], // ✅ Цена в Stars
-//                 {
-//                     need_name: false,
-//                     need_phone_number: false,
-//                     need_email: false,
-//                     need_shipping_address: false
-//                 }
-//             );
-//
-//             console.log("✅ Инвойс отправлен!");
-//         } catch (error) {
-//             console.error("❌ Ошибка при отправке инвойса:", error);
-//             bot.sendMessage(chatId, "❌ Ошибка при создании инвойса. Попробуйте позже.");
-//         }
-//     }
-// });
-//
-// // ✅ Подтверждение оплаты
-// bot.on("pre_checkout_query", async (query) => {
-//     await bot.answerPreCheckoutQuery(query.id, true);
-// });
-//
-// // 🎉 Успешная оплата
-// bot.on("successful_payment", async (msg) => {
-//     const chatId = msg.chat.id;
-//     const paymentInfo = msg.successful_payment;
-//
-//     try {
-//         const payload = JSON.parse(paymentInfo.invoice_payload);
-//         const userId = payload.user_id;
-//         const trainingId = payload.training_id;
-//
-//         console.log(`🎉 Оплата успешна! UserID: ${userId}, TrainingID: ${trainingId}`);
-//
-//         await bot.sendMessage(chatId, `✅ Поздравляем! Вы купили план тренировок 🎉 Теперь он доступен в вашем профиле.`);
-//
-//     } catch (error) {
-//         console.error("❌ Ошибка при обработке покупки:", error);
-//         bot.sendMessage(chatId, "⚠ Ошибка при обработке платежа. Свяжитесь с поддержкой.");
-//     }
-// });
-//
-// console.log("🚀 Bot is ready!");
-
 
 
 
