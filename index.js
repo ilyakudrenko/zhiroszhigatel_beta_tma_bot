@@ -100,9 +100,9 @@ bot.on("successful_payment", async (msg) => {
     console.log("✅ Оплата прошла! Данные о платеже:", paymentInfo);
 
     try {
-        if (!paymentInfo.invoice_payload) {
-            throw new Error("🚨 Ошибка: invoice_payload отсутствует!");
-        }
+        // if (!paymentInfo.invoice_payload) {
+        //     throw new Error("🚨 Ошибка: invoice_payload отсутствует!");
+        // }
 
         // ✅ Получаем user_id и telegram_id из payload
         const payload = JSON.parse(paymentInfo.invoice_payload);
@@ -112,9 +112,9 @@ bot.on("successful_payment", async (msg) => {
 
         console.log(`📦 Полученные данные: Telegram ID: ${telegramId}, User ID: ${userId}, Training ID: ${trainingId}`);
 
-        if (!userId) {
-            throw new Error("❌ Ошибка: user_id отсутствует в payload!");
-        }
+        // if (!userId) {
+        //     throw new Error("❌ Ошибка: user_id отсутствует в payload!");
+        // }
 
         // **Добавляем тренировку пользователю**
         console.log(`🌍 Добавляем тренировку ${trainingId} пользователю ${userId}`);
@@ -134,6 +134,7 @@ bot.on("successful_payment", async (msg) => {
 });
 
 console.log("🚀 Bot is running...");
+//loh
 
 
 
