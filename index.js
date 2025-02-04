@@ -37,6 +37,12 @@ bot.on('message', async (msg) => {
             }
         })
     }
+
+    if(text === '/hello') {
+        await bot.sendMessage(chatId, 'test', {
+
+        })
+    }
 });
 
 async function sendInvoice(chatId, title, trainingId, price) {
